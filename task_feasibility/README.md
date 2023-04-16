@@ -74,7 +74,7 @@ MoTIF
 ```
 
 ## Running Experiments
-We provide configuration files under the `configs` folder. All config files except the FastText ablations should be run with the input config name and path to CLIP text embeddings. For FastText ablations, the text embedding path is not neeeded. E.g.,
+We provide configuration files under the `configs` folder. All config files except the FastText ablations should be run with the input config name and path to CLIP text embeddings. For FastText ablations, the text embedding path is not needed. E.g.,
 
 ```
 # run clip combination experiment, which results in highest performance
