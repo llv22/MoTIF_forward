@@ -2,10 +2,36 @@ import json
 import os
 import glob
 import common
+import sys
+import traceback
 import numpy as np
 from PIL import Image
 import real_action_generator
 import tensorflow.compat.v1 as tf
+
+import datetime
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+            logging.StreamHandler(), 
+            logging.FileHandler(f"{__file__}-{'{0:%Y-%m-%d %H_%M_%S}'.format(datetime.datetime.now())}.log")
+        ]
+)
+
+def global_exception_handler(type, value, error_traceback):
+    """
+    refer to https://stackoverflow.com/questions/7075200/converting-exception-to-a-string-in-python-3
+    """
+    logger.exception(f"Uncaught exception {str(value)}")
+    logger.error(str(type))
+    logger.error(f"\n\t{''.join(traceback.format_tb(error_traceback))}")
+    sys.exit()
+
+sys.excepthook = global_exception_handler
 
 flags = tf.flags
 FLAGS = flags.FLAGS
@@ -16,6 +42,9 @@ flags.DEFINE_string(
 flags.DEFINE_string(
     "save_dir", "seq2act_debug",
     "Full path to the directory for saving the tf record file.")
+flags.DEFINE_string(
+    "search_task_name_dir", "task_automation/seq2act/motif_data_generation/tasknames.csv",
+    "Full path to the directory for tasknames.")
 flags.DEFINE_bool(
     "dedup_cycles", True,
     "Whether cycles should be removed from human demonstrations.")
@@ -193,10 +222,10 @@ def clean_idxs(all_view_uids, all_text, all_view_actions, all_chosen_uis):
 
 class MoTIFSample(object):
 
-    def __init__(self, app, data_dir, trace_id, widget_exceptions):
+    def __init__(self, app, data_dir, task_name_dir, trace_id, widget_exceptions):
         # load task id to name mapping
         TASK_I_TO_N = {}
-        with open(os.path.join(data_dir, 'tasknames.csv')) as csvfile:
+        with open(os.path.join(task_name_dir, 'tasknames.csv')) as csvfile:
             reader = csvfile.readlines()
             for row in reader:
                 row = row.strip().split(' ')
@@ -343,7 +372,7 @@ class MoTIFSample(object):
                     vh = json.load(f)
             except:
                 # saved view hierarchy json issue
-                # print('View hierarchy issue')
+                # logger.info('View hierarchy issue')
                 all_view_uids.append('') 
                 all_view_actions.append(None)
                 all_chosen.append(None)
@@ -426,7 +455,7 @@ class MoTIFSample(object):
             view_action = self.all_actions[view_idx]
             if not view_chosen and view_target_idx_before == 0:
                 # reasons could be: missing gesture, corrupted view hierarchy, missing min dist UI object
-                print('accounted for error')
+                logger.info('accounted for error')
                 continue
 
             view = view_path.split('/')[-1]
@@ -581,7 +610,7 @@ class MoTIFSample(object):
 
 
     def get_feat_dict(self):
-        print(self.trace_path)
+        logger.info(f"trace_path : {self.trace_path}")
         self.make_clean_trace()
         self.set_actions()
 
@@ -659,17 +688,21 @@ def main():
         os.mkdir(FLAGS.save_dir)
 
     traces = load_traces(FLAGS.splits_to_process)
-    print(len(traces))
-    print(FLAGS.dedup_cycles)
+    logger.info(f"len(traces): {len(traces)}")
+    logger.info(f"FLAGS.dedup_cycles: {FLAGS.dedup_cycles}")
     for i in range(len(traces)):
         trace = traces[i]
         if i % 100 == 0:
-            print(i)
+            logger.info(f"get to {i}")
 
+        apps = glob.glob(os.path.join(FLAGS.data_dir, '*', trace))
+        if len(apps) == 0:
+            logger.info(f'no app for trace: {trace}')
+            continue
         app = glob.glob(os.path.join(FLAGS.data_dir, '*', trace))[0]
         app = app.split('/')[-2]
 
-        mysample = MoTIFSample(app, FLAGS.data_dir, trace, 'widget_exception_dims.json')
+        mysample = MoTIFSample(app, FLAGS.data_dir, FLAGS.search_task_name_dir, trace, 'widget_exception_dims.json')
         sample_dict, objs = mysample.get_feat_dict()
 
         if sample_dict:

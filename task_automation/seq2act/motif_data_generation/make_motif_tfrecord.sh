@@ -9,6 +9,7 @@ parentdir="$(dirname "$dir")"
 
 python create_motif_dataset_no_thread.py --dataset "motif" \
                                          --input_dir ${parentdir}"/data/motif/raw/traces_02_14_21" \
+                                         --processed_dir "processed_motif_deduped" \
                                          --output_dir ${parentdir}"/data/motif/seq2act_debug_type_su_all" \
                                          --num_shards 1 \
                                          --split su_all \

@@ -18,6 +18,12 @@ dist/
 
 # data local
 data/
+experiments/
+raw_data/
+processed_motif_deduped/
+processed_motif_deduped_provided/
+*.tar.gz
+*.log
 
 # Other
 .DS_Store

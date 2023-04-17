@@ -17,7 +17,7 @@
 set -e
 set -x
 
-python -m bin.seq2act_decode --problem "motif" \
-                                     --data_files ${PWD}"/data/motif_ua_ut_final/*.tfrecord" \
-                                     --checkpoint_path ${PWD}"/ckpt_hparams/grounding" \
-                                     --output_dir ${PWD}"/decode/motif/ua_ut_test/"
+python -m seq2act.bin.seq2act_decode --problem "motif" \
+                                     --data_files ${PWD}"/seq2act/data/motif_ua_ut_final/*.tfrecord" \
+                                     --checkpoint_path ${PWD}"/seq2act/ckpt_hparams/grounding" \
+                                     --output_dir ${PWD}"/seq2act/decode/motif/ua_ut_test/"

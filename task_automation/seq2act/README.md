@@ -11,7 +11,8 @@ For RicoSCA and MoTIF, we provide code to process the tfrecords yourself because
 For RicoSCA, download the original [raw data](https://storage.googleapis.com/crowdstf-rico-uiuc-4540/rico_dataset_v0.1/unique_uis.tar.gz) and place it under `data/rico_sca/raw`; this raw folder should be the "combined" folder you get with the .json and .jpg Rico files after unzipping the linked Rico data. Then, run the following.
 
 ```
-sh create_rico_sca.sh
+cd task_automation
+bash seq2act/data_generation/create_rico_sca.sh
 ```
  NOTE: The authors of Seq2Act never released the text file containing input candidate words for their synthetic typing events. As a result, I chose a list of the top 10k English non-swear words. Consequently, their exact experiments are not reproduceable from scratch. Feel free to change this file based on your needs or design choices.
 
@@ -20,7 +21,9 @@ The bash script has different flags you can change as you need. The filter files
 For MoTIF, if you want to start from scratch or modify the original data processing, first download the two raw data folders [here](https://drive.google.com/file/d/1XScaD4Pr3K9a9E013wQdh4qd-svdkeVe/view?usp=sharing) (rename this first folder from "raw" to "traces_02_14_21") and [here](https://drive.google.com/file/d/1Yb8l3CSJkeGw62_GZIb_9Lwo2FYiu-GC/view?usp=sharing) (should be already named "traces_03_17_21") and place it in the `data/motif/raw` directory. Next, run
 
 ```
-sh dedup.sh
+cd task_automation/seq2act/motif_data_generation
+<!-- task_automation/seq2act/motif_data_generation/tasknames.csv -->
+bash dedup.sh
 ```
 
 to generate json files that contain information on each interaction trace in MoTIF. 
@@ -29,7 +32,8 @@ In this file we clean the captured action sequences from duplicate events, techn
 Once you have the cleaned data, unzip it in the `motif_data_generation` folder and run the following command
 
 ```
-sh make_motif_tfrecords.sh
+cd task_automation/seq2act/motif_data_generation
+bash make_motif_tfrecord.sh
 ```
 
 For more information see the `motif_data_generation` README.
@@ -39,6 +43,7 @@ For more information see the `motif_data_generation` README.
 Install the packages required by the codebase using our provided environment yaml:
 
 ```
+cd task_automation/seq2act
 conda env create -f environment.yml
 ```
 
@@ -47,25 +52,29 @@ conda env create -f environment.yml
 * Train (and continuously evaluate) seq2act Phrase Tuple Extraction models. NOTE: the original Seq2Act model trained on 128 batch size for the tuple extraction model, but the largest I could fit into memory with my computational resources was 64.
 
 ```
-sh train_seq2act.sh
+cd task_automation
+bash seq2act/bin/train_seq2act.sh
 ```
 
 * Train (and continuously evaluate) seq2act grounding models. Change reference checkpoint paths and others accordingly to reflect your saved tuple extraction models.
 
 ```
-sh train_ground_script.sh
+cd task_automation
+bash seq2act/train_ground_script.sh
 ```
 
 * To test the model end-to-end, run the decoder. Only the grounding outputs make sense when evaluating the high-level goal instruction, because we do not have ground truth step by step instruction spans to evaluate the tuple extraction model (i.e., when evaluating high-level goal MoTIF, ignore the .joint_refs decoder outputs). When we evaluate the step-by-step instructions of MoTIF, both outputs are sound.
 
 ```
-sh decode_seq2act.sh
+cd task_automation
+bash seq2act/decode_seq2act.sh
 ```
 
 To obtain performance values, run the following with the appropriate `.decode_act` path. We allow for grounding prediction to be within 1 UI object index of the ground truth because often the model predicts the textually correct option, while humans typically click on the visually correct option. See Figure 4 left of the main paper for an example of this. You can swap out the code for the comments in the file for an "exact match" metric. 
 
 ```
-python decode.motif.grounding_acc.py
+cd task_automation
+python -m seq2act.decode.grounding_acc
 ```
 
 We release [checkpoints](https://drive.google.com/file/d/16y6EO0FE51nDop_N5yVVfOhA2e79hvwN/view?usp=sharing) for the unseen app unseen task split and seen app unseen task split. See more information on these splits in `motif_data_generation`.

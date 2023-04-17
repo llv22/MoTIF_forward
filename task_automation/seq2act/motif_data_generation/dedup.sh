@@ -8,5 +8,6 @@ dir=${PWD}
 parentdir="$(dirname "$dir")"
 
 python all_in_one_motif_preprocess.py --data_dir ${parentdir}"/data/motif/raw/traces_02_14_21" \
+                                      --search_task_name_dir ${dir} \
                                       --save_dir "processed_motif_deduped" \
                                       --dedup_cycles=true

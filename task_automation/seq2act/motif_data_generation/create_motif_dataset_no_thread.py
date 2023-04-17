@@ -82,6 +82,9 @@ flags.DEFINE_string(
     'input_dir', _INPUT_DIR,
     'Full path to the directory containing the data files for a set of tasks.')
 flags.DEFINE_string(
+    'processed_dir', "processed_motif_deduped",
+    'Processed json location under the runtime folder.')
+flags.DEFINE_string(
     'output_dir', _OUTPUT_DIR,
     'Full path to the directory for saving the tf record file.')
 flags.DEFINE_boolean(
@@ -111,7 +114,7 @@ def get_kept_view_hierarchies(traces):
     vh_to_load = []
     screen_dims = []
     for tr in traces:
-        json_path = os.path.join('seq2act_9_5', tr + '.json') # processed_motif_deduped
+        json_path = os.path.join(FLAGS.processed_dir, tr + '.json') # processed_motif_deduped
         if os.path.exists(json_path): 
             with open(json_path) as f:
                 trace_info = json.load(f)
@@ -481,7 +484,7 @@ def _write_dataset(dataset_type, input_dir, output_dir, traces, max_word_num,
         futures = []
 
         for tr in sorted(traces):
-            file_path = os.path.join('seq2act_9_5', tr + '.json') # processed_motif_deduped
+            file_path = os.path.join(FLAGS.processed_dir, tr + '.json') # processed_motif_deduped
             shard = num_processed_files % FLAGS.num_shards
             
             if os.path.exists(file_path):               
